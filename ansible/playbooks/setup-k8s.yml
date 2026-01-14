@@ -47,11 +47,30 @@
         state: directory
         mode: '0755'
 
-    - name: Add Kubernetes apt key
+    - name: Remove existing Kubernetes apt key (refresh for new key)
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        state: absent
+
+    - name: Download Kubernetes apt key
       ansible.builtin.get_url:
         url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
-        dest: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        dest: /tmp/kubernetes-release.key
         mode: '0644'
+
+    - name: Dearmor Kubernetes apt key
+      ansible.builtin.command: >-
+        gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release.key
+
+    - name: Ensure Kubernetes keyring permissions
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        mode: '0644'
+
+    - name: Cleanup temporary Kubernetes key
+      ansible.builtin.file:
+        path: /tmp/kubernetes-release.key
+        state: absent
 
     - name: Add Kubernetes apt repository
       ansible.builtin.apt_repository:
