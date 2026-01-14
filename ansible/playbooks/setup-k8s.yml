@@ -1,0 +1,145 @@
+---
+- name: Install Kubernetes prerequisites
+  hosts: all
+  become: true
+  tasks:
+    - name: Disable swap
+      ansible.builtin.command: swapoff -a
+      when: ansible_swaptotal_mb | default(0) | int > 0
+
+    - name: Remove swap from fstab
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^(?!#)(.*\sswap\s)'
+        replace: '# \1'
+
+    - name: Load required kernel modules
+      ansible.builtin.modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: Set sysctl params for Kubernetes networking
+      ansible.builtin.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: true
+      loop:
+        - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
+        - { name: net.bridge.bridge-nf-call-ip6tables, value: 1 }
+        - { name: net.ipv4.ip_forward, value: 1 }
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gpg
+        update_cache: true
+
+    - name: Ensure apt keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Kubernetes apt key
+      ansible.builtin.get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        mode: '0644'
+
+    - name: Add Kubernetes apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+        state: present
+        filename: kubernetes
+
+    - name: Install kubelet, kubeadm, kubectl
+      ansible.builtin.apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        update_cache: true
+
+    - name: Hold Kubernetes packages
+      ansible.builtin.apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        mark: hold
+
+    - name: Ensure containerd config exists
+      ansible.builtin.command: containerd config default
+      register: containerd_config
+      changed_when: false
+
+    - name: Write containerd config
+      ansible.builtin.copy:
+        dest: /etc/containerd/config.toml
+        content: "{{ containerd_config.stdout }}"
+        mode: '0644'
+
+    - name: Use systemd cgroup driver
+      ansible.builtin.replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+
+    - name: Restart containerd
+      ansible.builtin.service:
+        name: containerd
+        state: restarted
+        enabled: true
+
+- name: Initialize Kubernetes control plane
+  hosts: k8s_master
+  become: true
+  tasks:
+    - name: Initialize cluster
+      ansible.builtin.command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: Create kubeconfig directory
+      ansible.builtin.file:
+        path: /root/.kube
+        state: directory
+        mode: '0700'
+
+    - name: Copy admin kubeconfig
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: true
+        mode: '0600'
+
+    - name: Install Flannel CNI
+      ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/v0.25.4/Documentation/kube-flannel.yml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Get join command
+      ansible.builtin.command: kubeadm token create --print-join-command
+      register: join_command
+      changed_when: false
+
+    - name: Store join command
+      ansible.builtin.set_fact:
+        k8s_join_command: "{{ join_command.stdout }}"
+
+- name: Join worker nodes
+  hosts: k8s_workers
+  become: true
+  tasks:
+    - name: Join cluster
+      ansible.builtin.command: "{{ hostvars[groups['k8s_master'][0]].k8s_join_command }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf

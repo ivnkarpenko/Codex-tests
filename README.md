@@ -46,7 +46,7 @@ Inventory is in `ansible/inventory.ini`. Run from the repo root or set `ANSIBLE_
 
 ```bash
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-docker.yml
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-k3s.yml
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-k8s.yml
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-app.yml
 ```
 

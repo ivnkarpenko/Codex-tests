@@ -77,7 +77,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bootstrap == 'true' }}
         run: |
           ansible-playbook ansible/playbooks/setup-docker.yml
-          ansible-playbook ansible/playbooks/setup-k3s.yml
+          ansible-playbook ansible/playbooks/setup-k8s.yml
 
       - name: Deploy app
         run: ansible-playbook ansible/playbooks/deploy-app.yml

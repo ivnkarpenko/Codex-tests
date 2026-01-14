@@ -1,6 +1,6 @@
 ---
-- name: Deploy calculator app to K3s
-  hosts: k3s_master
+- name: Deploy calculator app to Kubernetes
+  hosts: k8s_master
   become: true
   tasks:
     - name: Copy Kubernetes manifests
@@ -11,3 +11,5 @@
 
     - name: Apply manifests
       ansible.builtin.shell: kubectl apply -k /tmp/calc-k8s
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
