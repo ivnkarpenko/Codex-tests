@@ -31,6 +31,11 @@
         - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
         - { name: net.bridge.bridge-nf-call-ip6tables, value: 1 }
         - { name: net.ipv4.ip_forward, value: 1 }
+        - { name: net.ipv4.conf.all.rp_filter, value: 0 }
+        - { name: net.ipv4.conf.default.rp_filter, value: 0 }
+
+    - name: Ensure iptables FORWARD policy allows pod traffic
+      ansible.builtin.command: iptables -P FORWARD ACCEPT
 
     - name: Install base packages
       ansible.builtin.apt:
@@ -140,6 +145,11 @@
 
     - name: Install Flannel CNI
       ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/v0.25.4/Documentation/kube-flannel.yml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Wait for Flannel to be ready
+      ansible.builtin.command: kubectl -n kube-system rollout status ds/kube-flannel-ds --timeout=120s
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
 

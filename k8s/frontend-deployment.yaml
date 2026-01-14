@@ -4,7 +4,7 @@ metadata:
   name: calc-frontend
   namespace: calc
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: calc-frontend
@@ -13,6 +13,12 @@ spec:
       labels:
         app: calc-frontend
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
       containers:
         - name: frontend
           image: ghcr.io/ivnkarpenko/calc-frontend:latest

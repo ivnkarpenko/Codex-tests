@@ -32,7 +32,7 @@ URLs:
 
 ## Kubernetes
 
-The manifests are in `k8s/`. Update the image names if you use a different registry.
+The manifests are in `k8s/`. Update the image names if you use a different registry. For environments without cross-node pod networking, the app is pinned to the control-plane node.
 
 ```bash
 kubectl apply -k k8s
