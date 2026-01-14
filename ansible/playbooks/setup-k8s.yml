@@ -194,9 +194,6 @@
       ansible.builtin.apt:
         name: iptables-persistent
         update_cache: true
-        dpkg_options:
-          - --force-confdef
-          - --force-confold
       environment:
         DEBIAN_FRONTEND: noninteractive
 
