@@ -42,12 +42,12 @@ Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
 ## Ansible
 
-Inventory is in `ansible/inventory.ini`. Use SSH keys (recommended) or pass a password at runtime.
+Inventory is in `ansible/inventory.ini`. Run from the repo root or set `ANSIBLE_CONFIG=/mnt/d/Projects/Codex-tests/ansible.cfg`. Use SSH keys (recommended) or pass a password at runtime.
 
 ```bash
-ansible-playbook ansible/playbooks/setup-docker.yml
-ansible-playbook ansible/playbooks/setup-k3s.yml
-ansible-playbook ansible/playbooks/deploy-app.yml
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-docker.yml
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-k3s.yml
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-app.yml
 ```
 
 ## CI/CD (GitHub Actions)
