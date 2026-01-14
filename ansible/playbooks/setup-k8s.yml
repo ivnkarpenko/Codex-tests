@@ -151,23 +151,26 @@
     - name: Configure ingress-nginx to bind 80/443 on all nodes
       ansible.builtin.shell: |
         set -e
-        kubectl -n ingress-nginx get deployment ingress-nginx-controller -o json | python3 - <<'PY' | kubectl apply -f -
-        import json,sys
-        data=json.load(sys.stdin)
-        data["spec"]["replicas"]=3
-        tpl=data["spec"]["template"]
-        tpl.setdefault("spec",{})
-        tpl["spec"]["hostNetwork"]=True
-        tpl["spec"]["dnsPolicy"]="ClusterFirstWithHostNet"
-        for c in tpl["spec"].get("containers",[]):
-            if c.get("name")=="controller":
-                for p in c.get("ports",[]):
-                    if p.get("name")=="http":
-                        p["hostPort"]=80
-                    elif p.get("name")=="https":
-                        p["hostPort"]=443
-        print(json.dumps(data))
-        PY
+        kubectl -n ingress-nginx scale deployment ingress-nginx-controller --replicas=3
+        kubectl -n ingress-nginx patch deployment ingress-nginx-controller --type=merge -p '{
+          "spec": {
+            "template": {
+              "spec": {
+                "hostNetwork": true,
+                "dnsPolicy": "ClusterFirstWithHostNet",
+                "containers": [
+                  {
+                    "name": "controller",
+                    "ports": [
+                      { "containerPort": 80, "hostPort": 80 },
+                      { "containerPort": 443, "hostPort": 443 }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }'
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
 
