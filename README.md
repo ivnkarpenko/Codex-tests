@@ -40,6 +40,14 @@ kubectl apply -k k8s
 
 Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
+## DNS (Reg.ru)
+
+Set A records for your domain to the public IP of the ingress node.
+
+Example for `kaiv.site`:
+- `A @` -> `217.60.63.189`
+- `A www` -> `217.60.63.189`
+
 ## Ansible
 
 Inventory is in `ansible/inventory.ini`. Run from the repo root or set `ANSIBLE_CONFIG=/mnt/d/Projects/Codex-tests/ansible.cfg`. Use SSH keys (recommended) or pass a password at runtime.

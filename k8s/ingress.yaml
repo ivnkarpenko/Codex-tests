@@ -6,7 +6,24 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: ivank.duckdns.org
+    - host: kaiv.site
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: calc-backend
+                port:
+                  number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: calc-frontend
+                port:
+                  number: 80
+    - host: www.kaiv.site
       http:
         paths:
           - path: /api
