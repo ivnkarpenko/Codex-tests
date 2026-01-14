@@ -148,6 +148,23 @@
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
 
+    - name: Ensure ingress-nginx service is NodePort
+      ansible.builtin.command: kubectl -n ingress-nginx patch svc ingress-nginx-controller -p '{"spec":{"type":"NodePort"}}'
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Read ingress-nginx NodePorts
+      ansible.builtin.command: >-
+        kubectl -n ingress-nginx get svc ingress-nginx-controller
+        -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort} {.spec.ports[?(@.name=="https")].nodePort}'
+      register: ingress_nodeports
+      changed_when: false
+
+    - name: Store ingress NodePorts
+      ansible.builtin.set_fact:
+        ingress_http_nodeport: "{{ ingress_nodeports.stdout.split()[0] }}"
+        ingress_https_nodeport: "{{ ingress_nodeports.stdout.split()[1] }}"
+
     - name: Get join command
       ansible.builtin.command: kubeadm token create --print-join-command
       register: join_command
@@ -165,3 +182,39 @@
       ansible.builtin.command: "{{ hostvars[groups['k8s_master'][0]].k8s_join_command }}"
       args:
         creates: /etc/kubernetes/kubelet.conf
+
+- name: Redirect 80/443 to ingress NodePorts
+  hosts: all
+  become: true
+  vars:
+    ingress_http_nodeport: "{{ hostvars[groups['k8s_master'][0]].ingress_http_nodeport }}"
+    ingress_https_nodeport: "{{ hostvars[groups['k8s_master'][0]].ingress_https_nodeport }}"
+  tasks:
+    - name: Install iptables-persistent
+      ansible.builtin.apt:
+        name: iptables-persistent
+        update_cache: true
+        dpkg_options:
+          - --force-confdef
+          - --force-confold
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Add PREROUTING redirects for 80/443
+      ansible.builtin.shell: |
+        set -e
+        iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports {{ ingress_http_nodeport }} \
+          || iptables -t nat -I PREROUTING 1 -p tcp --dport 80 -j REDIRECT --to-ports {{ ingress_http_nodeport }}
+        iptables -t nat -C PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports {{ ingress_https_nodeport }} \
+          || iptables -t nat -I PREROUTING 1 -p tcp --dport 443 -j REDIRECT --to-ports {{ ingress_https_nodeport }}
+
+    - name: Add OUTPUT redirects for local node IP
+      ansible.builtin.shell: |
+        set -e
+        iptables -t nat -C OUTPUT -p tcp -d {{ ansible_default_ipv4.address }} --dport 80 -j REDIRECT --to-ports {{ ingress_http_nodeport }} \
+          || iptables -t nat -I OUTPUT 1 -p tcp -d {{ ansible_default_ipv4.address }} --dport 80 -j REDIRECT --to-ports {{ ingress_http_nodeport }}
+        iptables -t nat -C OUTPUT -p tcp -d {{ ansible_default_ipv4.address }} --dport 443 -j REDIRECT --to-ports {{ ingress_https_nodeport }} \
+          || iptables -t nat -I OUTPUT 1 -p tcp -d {{ ansible_default_ipv4.address }} --dport 443 -j REDIRECT --to-ports {{ ingress_https_nodeport }}
+
+    - name: Persist iptables rules
+      ansible.builtin.command: netfilter-persistent save
