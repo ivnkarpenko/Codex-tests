@@ -44,8 +44,10 @@ Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
 Set A records for your domain to the public IP of the ingress node.
 
-Example for `kaiv.site`:
+Example for `kaiv.site` (ingress binds to 80/443 on all nodes):
+- `A @` -> `217.60.63.173`
 - `A @` -> `217.60.63.189`
+- `A @` -> `217.60.63.237`
 - `A www` -> `217.60.63.189`
 
 ## Ansible
