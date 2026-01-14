@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CalcOps</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <main class="app">
+      <header class="hero">
+        <span class="badge">DevOps Calculator</span>
+        <h1>CalcOps</h1>
+        <p>Small, fast, and observable. Try a calculation and watch the metrics flow.</p>
+      </header>
+      <section class="card">
+        <div class="row">
+          <label>
+            <span>First number</span>
+            <input type="number" step="any" id="value-a" placeholder="12" />
+          </label>
+          <label>
+            <span>Operation</span>
+            <select id="operation">
+              <option value="add">+</option>
+              <option value="sub">-</option>
+              <option value="mul">×</option>
+              <option value="div">÷</option>
+            </select>
+          </label>
+          <label>
+            <span>Second number</span>
+            <input type="number" step="any" id="value-b" placeholder="4" />
+          </label>
+        </div>
+        <button id="calc-btn">Calculate</button>
+        <div class="result">
+          <span class="result-label">Result</span>
+          <span id="result-value">—</span>
+          <span id="result-error" class="error"></span>
+        </div>
+      </section>
+      <section class="links">
+        <a href="/metrics" target="_blank" rel="noreferrer">Backend metrics</a>
+        <a href="/health" target="_blank" rel="noreferrer">Backend health</a>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

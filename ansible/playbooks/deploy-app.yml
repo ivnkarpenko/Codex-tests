@@ -1,0 +1,13 @@
+---
+- name: Deploy calculator app to K3s
+  hosts: k3s_master
+  become: true
+  tasks:
+    - name: Copy Kubernetes manifests
+      ansible.builtin.copy:
+        src: ../../k8s/
+        dest: /tmp/calc-k8s/
+        mode: '0644'
+
+    - name: Apply manifests
+      ansible.builtin.shell: kubectl apply -k /tmp/calc-k8s
