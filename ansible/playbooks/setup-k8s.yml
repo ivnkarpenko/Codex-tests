@@ -143,6 +143,11 @@
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
 
+    - name: Install ingress-nginx controller
+      ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
     - name: Get join command
       ansible.builtin.command: kubeadm token create --print-join-command
       register: join_command
