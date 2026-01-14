@@ -115,9 +115,13 @@
 - name: Initialize Kubernetes control plane
   hosts: k8s_master
   become: true
+  vars:
+    k8s_ignore_preflight_errors: "NumCPU"
   tasks:
     - name: Initialize cluster
-      ansible.builtin.command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      ansible.builtin.command: >-
+        kubeadm init --pod-network-cidr=10.244.0.0/16
+        --ignore-preflight-errors={{ k8s_ignore_preflight_errors }}
       args:
         creates: /etc/kubernetes/admin.conf
 
