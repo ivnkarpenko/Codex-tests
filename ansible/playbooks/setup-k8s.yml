@@ -87,13 +87,7 @@
         update_cache: true
 
     - name: Hold Kubernetes packages
-      ansible.builtin.apt:
-        name:
-          - kubelet
-          - kubeadm
-          - kubectl
-        state: present
-        mark: hold
+      ansible.builtin.command: apt-mark hold kubelet kubeadm kubectl
 
     - name: Ensure containerd config exists
       ansible.builtin.command: containerd config default
