@@ -8,7 +8,7 @@ A simple calculator with a Node.js backend and static frontend, plus Docker-base
 - `frontend/` Static UI served by Nginx with API proxy
 - `monitoring/` Prometheus, Grafana, Loki, Promtail configs
 - `docker-compose.yml` Local stack
-- `ansible/` Inventory + playbooks (Docker + K3s + deploy)
+- `ansible/` Inventory + playbooks (Docker + K8s + deploy)
 - `k8s/` Kubernetes manifests
 
 ## Local run (Docker)
@@ -30,33 +30,47 @@ URLs:
 - `POST /api/calc` with JSON `{ "a": 1, "b": 2, "op": "add" }`
 - `GET /metrics` Prometheus metrics
 
+## Servers (public IP)
+
+Servers used:
+- `server-O0Vs6g` (control-plane): `94.183.183.133`
+- `server-wZvlaz-1` (worker): `94.183.184.8`
+- `server-wZvlaz-2` (worker): `94.183.184.130`
+
+DNS for `kaiv.site`:
+- `A @` -> `94.183.183.133`
+- `A www` -> `94.183.183.133`
+
+If you want `kaiv.site` to serve on port 80/443, add an external load balancer or a reverse proxy on the control-plane node that forwards to the ingress NodePort.
+
 ## Kubernetes
 
-The manifests are in `k8s/`. Update the image names if you use a different registry. For environments without cross-node pod networking, the app is pinned to the control-plane node.
+The manifests are in `k8s/`. Update the image names if you use a different registry.
 
 ```bash
 kubectl apply -k k8s
 ```
 
+Ingress is installed via Ansible and exposed as a NodePort service.
+To see the ports:
+```bash
+kubectl -n ingress-nginx get svc ingress-nginx-controller
+```
+Access via `http://<server-ip>:<nodeport>` or configure an external load balancer for 80/443.
+
 Monitoring for k8s is documented in `k8s/monitoring/README.md`.
-
-## DNS (Reg.ru)
-
-Set A records for your domain to the public IP of the ingress node.
-
-Example for `kaiv.site` (ingress binds to 80/443 on the control-plane node):
-- `A @` -> `217.60.63.189`
-- `A www` -> `217.60.63.189`
 
 ## Ansible
 
-Inventory is in `ansible/inventory.ini`. Run from the repo root or set `ANSIBLE_CONFIG=/mnt/d/Projects/Codex-tests/ansible.cfg`. Use SSH keys (recommended) or pass a password at runtime.
+Inventory is in `ansible/inventory.ini`. Run from the repo root or set `ANSIBLE_CONFIG=/mnt/d/Projects/Codex-tests/ansible.cfg`. Update the IPs for your servers. Use SSH keys (recommended) or pass a password at runtime.
 
 ```bash
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-docker.yml
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-k8s.yml
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-app.yml
 ```
+
+Optional: if you use a private network, connect via your VPN/WireGuard solution.
 
 ## CI/CD (GitHub Actions)
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       bootstrap:
-        description: "Run server bootstrap (docker + k3s)"
+        description: "Run server bootstrap (docker + k8s)"
         type: boolean
         default: false
 

@@ -4,7 +4,7 @@ metadata:
   name: calc-backend
   namespace: calc
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: calc-backend
@@ -13,12 +13,6 @@ spec:
       labels:
         app: calc-backend
     spec:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
-      tolerations:
-        - key: "node-role.kubernetes.io/control-plane"
-          operator: "Exists"
-          effect: "NoSchedule"
       containers:
         - name: backend
           image: ghcr.io/ivnkarpenko/calc-backend:latest
