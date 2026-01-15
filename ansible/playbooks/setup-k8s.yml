@@ -201,18 +201,22 @@
       ansible.builtin.shell: |
         set -e
         TMP=/tmp/kube-proxy-config.yaml
-        kubectl -n kube-system get configmap kube-proxy -o jsonpath='{.data.config\.conf}' > "$TMP"
+        kubectl -n kube-system --request-timeout=60s get configmap kube-proxy -o jsonpath='{.data.config\.conf}' > "$TMP"
         if grep -q '^metricsBindAddress:' "$TMP"; then
           sed -i 's#^metricsBindAddress:.*#metricsBindAddress: "0.0.0.0:10249"#' "$TMP"
         else
           sed -i '/^kind: KubeProxyConfiguration/a metricsBindAddress: "0.0.0.0:10249"' "$TMP"
         fi
-        kubectl -n kube-system create configmap kube-proxy \
+        kubectl -n kube-system --request-timeout=60s create configmap kube-proxy \
           --from-file=config.conf="$TMP" \
           -o yaml --dry-run=client | kubectl apply -f -
-        kubectl -n kube-system rollout restart ds/kube-proxy
+        kubectl -n kube-system --request-timeout=60s rollout restart ds/kube-proxy
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kube_proxy_metrics_update
+      retries: 5
+      delay: 10
+      until: kube_proxy_metrics_update.rc == 0
 
     - name: Get join command
       ansible.builtin.command: kubeadm token create --print-join-command
