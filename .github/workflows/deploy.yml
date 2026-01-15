@@ -3,12 +3,7 @@ name: Deploy
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
-    inputs:
-      bootstrap:
-        description: "Run server bootstrap (docker + k8s)"
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -74,7 +69,6 @@ jobs:
           echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
 
       - name: Bootstrap servers
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bootstrap == 'true' }}
         run: |
           ansible-playbook ansible/playbooks/setup-docker.yml
           ansible-playbook ansible/playbooks/setup-k8s.yml

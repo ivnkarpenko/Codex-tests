@@ -76,7 +76,7 @@ Optional: if you use a private network, connect via your VPN/WireGuard solution.
 
 Workflows:
 - `CI` runs backend tests and builds Docker images.
-- `Deploy` builds/pushes images to GHCR and deploys via Ansible.
+- `Deploy` builds/pushes images to GHCR, runs server bootstrap (Docker + K8s), and deploys via Ansible.
 
 ### Required secrets
 
