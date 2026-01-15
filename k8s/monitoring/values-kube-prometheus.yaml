@@ -2,12 +2,23 @@ grafana:
   adminPassword: admin
   service:
     type: ClusterIP
-  additionalDataSources:
-    - name: Loki
-      type: loki
-      url: http://loki.monitoring.svc.cluster.local:3100
-      access: proxy
-      isDefault: false
+  sidecar:
+    datasources:
+      enabled: false
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://kube-prometheus-kube-p-prometheus.monitoring.svc.cluster.local:9090
+          access: proxy
+          isDefault: true
+        - name: Loki
+          type: loki
+          url: http://loki.monitoring.svc.cluster.local:3100
+          access: proxy
+          isDefault: false
   resources:
     requests:
       cpu: 100m
