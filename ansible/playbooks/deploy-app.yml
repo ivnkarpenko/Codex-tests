@@ -9,7 +9,31 @@
         dest: /tmp/calc-k8s/
         mode: '0644'
 
-    - name: Apply manifests
-      ansible.builtin.shell: kubectl apply -k /tmp/calc-k8s
+    - name: Apply core manifests
+      ansible.builtin.shell: |
+        kubectl apply -f /tmp/calc-k8s/namespace.yaml
+        kubectl apply -f /tmp/calc-k8s/backend-service.yaml
+        kubectl apply -f /tmp/calc-k8s/frontend-service.yaml
+        kubectl apply -f /tmp/calc-k8s/backend-deployment.yaml
+        kubectl apply -f /tmp/calc-k8s/frontend-deployment.yaml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Wait for ingress-nginx admission to be ready
+      ansible.builtin.shell: |
+        kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=120s
+        kubectl -n ingress-nginx wait --for=condition=ready pod -l app.kubernetes.io/component=controller --timeout=120s
+        for i in $(seq 1 30); do
+          if kubectl -n ingress-nginx get endpoints ingress-nginx-controller-admission -o jsonpath='{.subsets[*].addresses[*].ip}' | grep -q '[0-9]'; then
+            exit 0
+          fi
+          sleep 2
+        done
+        exit 1
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Apply ingress
+      ansible.builtin.shell: kubectl apply -f /tmp/calc-k8s/ingress.yaml
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
