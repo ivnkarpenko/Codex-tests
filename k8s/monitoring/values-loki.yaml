@@ -5,12 +5,14 @@ loki:
 
 promtail:
   enabled: true
+  hostNetwork: false
+  dnsPolicy: ClusterFirst
   config:
     clients:
-      - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
-        batchsize: 524288
-        batchwait: 1s
-        timeout: 30s
+      - url: http://loki-headless.monitoring.svc.cluster.local:3100/loki/api/v1/push
+        batchsize: 65536
+        batchwait: 2s
+        timeout: 60s
         backoff_config:
           min_period: 1s
           max_period: 30s
