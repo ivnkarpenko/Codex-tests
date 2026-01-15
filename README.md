@@ -39,9 +39,9 @@ Servers used:
 
 DNS for `kaiv.site`:
 - `A @` -> `94.183.183.133`
+- `A @` -> `94.183.184.8`
+- `A @` -> `94.183.184.130`
 - `A www` -> `94.183.183.133`
-
-If you want `kaiv.site` to serve on port 80/443, add an external load balancer or a reverse proxy on the control-plane node that forwards to the ingress NodePort.
 
 ## Kubernetes
 
@@ -51,12 +51,8 @@ The manifests are in `k8s/`. Update the image names if you use a different regis
 kubectl apply -k k8s
 ```
 
-Ingress is installed via Ansible and exposed as a NodePort service.
-To see the ports:
-```bash
-kubectl -n ingress-nginx get svc ingress-nginx-controller
-```
-Access via `http://<server-ip>:<nodeport>` or configure an external load balancer for 80/443.
+Ingress is installed via Ansible and exposed as a LoadBalancer service with `externalIPs`.
+Make sure `ingress_external_ips` in `ansible/inventory.ini` matches your DNS A records.
 
 Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
@@ -70,7 +66,7 @@ ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-k8s.yml
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-app.yml
 ```
 
-Optional: if you use a private network, connect via your VPN/WireGuard solution.
+If you use a private network, run Ansible from a host that can reach the servers.
 
 ## CI/CD (GitHub Actions)
 

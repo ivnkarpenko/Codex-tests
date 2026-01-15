@@ -151,21 +151,12 @@
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
 
-    - name: Ensure ingress-nginx service is NodePort
-      ansible.builtin.command: kubectl -n ingress-nginx patch svc ingress-nginx-controller -p '{"spec":{"type":"NodePort"}}'
+    - name: Configure ingress-nginx service as LoadBalancer
+      ansible.builtin.command: >-
+        kubectl -n ingress-nginx patch svc ingress-nginx-controller
+        -p '{"spec":{"type":"LoadBalancer","externalIPs":{{ ingress_external_ips.split(",") | to_json }},"externalTrafficPolicy":"Cluster"}}'
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-
-    - name: Read ingress-nginx NodePorts
-      ansible.builtin.command: >-
-        kubectl -n ingress-nginx get svc ingress-nginx-controller
-        -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort} {.spec.ports[?(@.name=="https")].nodePort}'
-      register: ingress_nodeports
-      changed_when: false
-
-    - name: Show ingress NodePorts
-      ansible.builtin.debug:
-        msg: "Ingress NodePorts: http={{ ingress_nodeports.stdout.split()[0] }} https={{ ingress_nodeports.stdout.split()[1] }}"
 
     - name: Get join command
       ansible.builtin.command: kubeadm token create --print-join-command
