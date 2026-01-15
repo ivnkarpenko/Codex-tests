@@ -56,6 +56,18 @@ Make sure `ingress_external_ips` in `ansible/inventory.ini` matches your DNS A r
 
 Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
+### Monitoring access (K8s)
+
+Grafana and Prometheus are installed via Helm in the `monitoring` namespace.
+
+```bash
+kubectl -n monitoring port-forward svc/kube-prometheus-grafana 3001:80
+kubectl -n monitoring port-forward svc/kube-prometheus-kube-p-prometheus 9090:9090
+kubectl -n monitoring port-forward svc/loki 3100:3100
+```
+
+Grafana default login: `admin` / `admin` (change in `k8s/monitoring/values-kube-prometheus.yaml`).
+
 ## Ansible
 
 Inventory is in `ansible/inventory.ini`. Run from the repo root or set `ANSIBLE_CONFIG=/mnt/d/Projects/Codex-tests/ansible.cfg`. Update the IPs for your servers. Use SSH keys (recommended) or pass a password at runtime.
