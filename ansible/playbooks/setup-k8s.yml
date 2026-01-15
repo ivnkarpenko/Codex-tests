@@ -158,6 +158,62 @@
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
 
+    - name: Allow controller-manager metrics on all interfaces
+      ansible.builtin.replace:
+        path: /etc/kubernetes/manifests/kube-controller-manager.yaml
+        regexp: '--bind-address=.*'
+        replace: '--bind-address=0.0.0.0'
+
+    - name: Ensure controller-manager metrics bind-address is set
+      ansible.builtin.lineinfile:
+        path: /etc/kubernetes/manifests/kube-controller-manager.yaml
+        line: '    - --bind-address=0.0.0.0'
+        insertafter: '^    - --controllers='
+        state: present
+
+    - name: Allow scheduler metrics on all interfaces
+      ansible.builtin.replace:
+        path: /etc/kubernetes/manifests/kube-scheduler.yaml
+        regexp: '--bind-address=.*'
+        replace: '--bind-address=0.0.0.0'
+
+    - name: Ensure scheduler metrics bind-address is set
+      ansible.builtin.lineinfile:
+        path: /etc/kubernetes/manifests/kube-scheduler.yaml
+        line: '    - --bind-address=0.0.0.0'
+        insertafter: '^    - --authentication-kubeconfig='
+        state: present
+
+    - name: Allow etcd metrics on all interfaces
+      ansible.builtin.replace:
+        path: /etc/kubernetes/manifests/etcd.yaml
+        regexp: '--listen-metrics-urls=.*'
+        replace: '--listen-metrics-urls=http://0.0.0.0:2381'
+
+    - name: Ensure etcd metrics listen url is set
+      ansible.builtin.lineinfile:
+        path: /etc/kubernetes/manifests/etcd.yaml
+        line: '    - --listen-metrics-urls=http://0.0.0.0:2381'
+        insertafter: '^    - --listen-client-urls='
+        state: present
+
+    - name: Update kube-proxy metrics bind address
+      ansible.builtin.shell: |
+        set -e
+        TMP=/tmp/kube-proxy-config.yaml
+        kubectl -n kube-system get configmap kube-proxy -o jsonpath='{.data.config\.conf}' > "$TMP"
+        if grep -q '^metricsBindAddress:' "$TMP"; then
+          sed -i 's#^metricsBindAddress:.*#metricsBindAddress: "0.0.0.0:10249"#' "$TMP"
+        else
+          sed -i '/^kind: KubeProxyConfiguration/a metricsBindAddress: "0.0.0.0:10249"' "$TMP"
+        fi
+        kubectl -n kube-system create configmap kube-proxy \
+          --from-file=config.conf="$TMP" \
+          -o yaml --dry-run=client | kubectl apply -f -
+        kubectl -n kube-system rollout restart ds/kube-proxy
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
     - name: Get join command
       ansible.builtin.command: kubeadm token create --print-join-command
       register: join_command

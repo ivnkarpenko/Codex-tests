@@ -25,6 +25,12 @@ Two ingresses are included for public access:
 
 Update the hostnames if you use different domains.
 
+## Dashboards
+
+Default dashboards are disabled; two curated dashboards are installed:
+- Node Exporter Full (ID 1860)
+- Kubernetes cluster (ID 315)
+
 ## Ansible
 
 If you run `ansible/playbooks/setup-k8s.yml`, the charts are installed automatically with the values files above.

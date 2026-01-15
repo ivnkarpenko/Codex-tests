@@ -62,6 +62,18 @@ Make sure `ingress_external_ips` in `ansible/inventory.ini` matches your DNS A r
 
 Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
+### Provider firewall (required for full metrics)
+
+Open these TCP ports **between your nodes only** (source: your node public IPs):
+- `9100` (node-exporter)
+- `10249` (kube-proxy)
+- `10250` (kubelet)
+- `10257` (kube-controller-manager)
+- `10259` (kube-scheduler)
+- `2381` (etcd metrics)
+
+If your provider blocks these ports, Grafana dashboards will show partial data.
+
 ### Monitoring access (K8s)
 
 Grafana and Prometheus are installed via Helm in the `monitoring` namespace.
@@ -78,6 +90,7 @@ kubectl -n monitoring port-forward svc/loki 3100:3100
 ```
 
 Grafana default login: `admin` / `admin` (change in `k8s/monitoring/values-kube-prometheus.yaml`).
+Grafana ships only two curated dashboards by default (Node Exporter + Kubernetes cluster) from `k8s/monitoring/values-kube-prometheus.yaml`.
 
 ## Ansible
 

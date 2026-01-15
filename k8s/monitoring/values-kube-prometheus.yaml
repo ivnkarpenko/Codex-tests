@@ -1,9 +1,12 @@
 grafana:
   adminPassword: admin
+  defaultDashboardsEnabled: false
   service:
     type: ClusterIP
   sidecar:
     datasources:
+      enabled: false
+    dashboards:
       enabled: false
   datasources:
     datasources.yaml:
@@ -19,6 +22,28 @@ grafana:
           url: http://loki.monitoring.svc.cluster.local:3100
           access: proxy
           isDefault: false
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          orgId: 1
+          folder: Observability
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  dashboards:
+    default:
+      node-exporter:
+        gnetId: 1860
+        revision: 37
+        datasource: Prometheus
+      k8s-cluster:
+        gnetId: 315
+        revision: 3
+        datasource: Prometheus
   resources:
     requests:
       cpu: 100m
