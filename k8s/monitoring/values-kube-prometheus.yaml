@@ -11,7 +11,7 @@ grafana:
       datasources:
         - name: Prometheus
           type: prometheus
-          url: http://kube-prometheus-kube-p-prometheus.monitoring.svc.cluster.local:9090
+          url: http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090
           access: proxy
           isDefault: true
         - name: Loki
