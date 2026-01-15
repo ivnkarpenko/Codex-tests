@@ -205,6 +205,8 @@
       loop:
         - values-kube-prometheus.yaml
         - values-loki.yaml
+        - grafana-ingress.yaml
+        - prometheus-ingress.yaml
 
     - name: Add Helm repos
       ansible.builtin.command: "{{ item }}"
@@ -233,3 +235,12 @@
         -f /tmp/calc-monitoring/values-loki.yaml
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Apply monitoring ingresses
+      ansible.builtin.command: >-
+        kubectl apply -f /tmp/calc-monitoring/{{ item }}
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      loop:
+        - grafana-ingress.yaml
+        - prometheus-ingress.yaml

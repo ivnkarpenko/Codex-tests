@@ -17,6 +17,14 @@ helm install loki grafana/loki-stack --namespace monitoring \
 
 Then point Grafana at Prometheus and Loki services, or use the built-in provisioning from the charts.
 
+## Ingress
+
+Two ingresses are included for public access:
+- `k8s/monitoring/grafana-ingress.yaml` -> `grafana.kaiv.site`
+- `k8s/monitoring/prometheus-ingress.yaml` -> `prometheus.kaiv.site`
+
+Update the hostnames if you use different domains.
+
 ## Ansible
 
 If you run `ansible/playbooks/setup-k8s.yml`, the charts are installed automatically with the values files above.

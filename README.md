@@ -42,6 +42,12 @@ DNS for `kaiv.site`:
 - `A @` -> `94.183.184.8`
 - `A @` -> `94.183.184.130`
 - `A www` -> `94.183.183.133`
+- `A grafana` -> `94.183.183.133`
+- `A grafana` -> `94.183.184.8`
+- `A grafana` -> `94.183.184.130`
+- `A prometheus` -> `94.183.183.133`
+- `A prometheus` -> `94.183.184.8`
+- `A prometheus` -> `94.183.184.130`
 
 ## Kubernetes
 
@@ -60,9 +66,14 @@ Monitoring for k8s is documented in `k8s/monitoring/README.md`.
 
 Grafana and Prometheus are installed via Helm in the `monitoring` namespace.
 
+Ingress hosts:
+- Grafana: `http://grafana.kaiv.site`
+- Prometheus: `http://prometheus.kaiv.site`
+
+Port-forward alternative:
 ```bash
 kubectl -n monitoring port-forward svc/kube-prometheus-grafana 3001:80
-kubectl -n monitoring port-forward svc/kube-prometheus-kube-p-prometheus 9090:9090
+kubectl -n monitoring port-forward svc/kube-prometheus-kube-prome-prometheus 9090:9090
 kubectl -n monitoring port-forward svc/loki 3100:3100
 ```
 

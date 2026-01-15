@@ -5,6 +5,16 @@ loki:
 
 promtail:
   enabled: true
+  config:
+    clients:
+      - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+        batchsize: 524288
+        batchwait: 1s
+        timeout: 30s
+        backoff_config:
+          min_period: 1s
+          max_period: 30s
+          max_retries: 20
 
 grafana:
   enabled: false
